@@ -73,12 +73,12 @@ function question() {
     }
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-  var n = getRandomInt(0, keysArray.length-1);
+  var n = getRandomInt(0, keysArray.length - 1);
   c = keysArray[n];
   console.log(centerText("question:  " + c));
 }
 
-(function main() {
+function main() {
   console.log("九宫格键盘输入法训练开始,看见屏幕中间的字母，输入对应的数字，按回车键重新出题");
   console.log("1.全部声母");
   console.log("2.部分声母");
@@ -93,18 +93,32 @@ function question() {
         console.log('进入模式2');
         select2();
         break;
+      case 'exit':
+        console.log('再见！');
+        process.exit();
       default:
         console.log('无效的选择');
         main();
     }
   })
+}
+main();
 
-})();
-
-function select1() {
+function practice() {
   question();
   //按键事件
-  process.stdin.on('keypress', (str, key) => {
+  process.stdin.on('keypress', handleKeypress);
+  function stopKeypressListener(handleKeypress) {
+    // 停止本keypress事件的触发
+    // 1. 移除特定的事件监听器
+    process.stdin.removeListener('keypress', handleKeypress);
+    // 2. 暂停输入流
+    //process.stdin.pause();
+    // 3. 恢复原始模式
+    //process.stdin.setRawMode(false);
+    //console.log('Keypress 事件监听已终止。');
+  }
+  function handleKeypress(str, key) {
     // key 是一个对象，包含按键的详细信息[2](@ref)
     //console.log('当前按键信息：', key);
 
@@ -115,6 +129,14 @@ function select1() {
       // 例如，rl.close(); 来关闭接口
       // 刷新c，即重新生成一个问题
       question();
+      return;
+    }
+
+    if (key.name === 'escape') {
+      //console.log('>>> 你按下了退出键 (\\e)');
+      // 你可以在这里执行需要响应退出键的代码
+      stopKeypressListener(handleKeypress); //停止keypress事件监听
+      main(); //重新开始
       return;
     }
 
@@ -138,7 +160,12 @@ function select1() {
       //console.log("输入错误");
       countWrong++;
     }
-  });
+  }
+}
+
+function select1() {
+  //console.log("进入模式1");
+  practice();
 }
 
 function select2() {
@@ -161,7 +188,7 @@ function select2() {
     //callback函数，回调，输入字母后触发
     map = pick(map, keysArray);
     //console.log(map);
-    select1();
+    practice();
   }
 
 }

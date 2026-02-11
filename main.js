@@ -61,6 +61,7 @@ function main() {
   console.log("1.全部声母");
   console.log("2.部分声母");
   console.log("3.训练全部声母100次");
+  console.log("4.1分钟计时练习");
 
   rl.question('请输入你的选择：', (answer) => {
     switch (answer) {
@@ -76,6 +77,10 @@ function main() {
         console.log('进入模式3');
         select3();
         break;
+      case '4':
+        console.log('进入模式4');
+        select4();
+        break;
       case 'exit':
         console.log('再见！');
         process.exit();
@@ -88,11 +93,25 @@ function main() {
 main();
 
 function practice(selectN, detail) {
+  var percent = undefined;
   var questionCount = 0;
   question();
   questionCount++;
   //按键事件
   process.stdin.on('keypress', handleKeypress);
+  if (selectN == "select4") {
+    var interval = setInterval(() => {
+      //console.log("触发1秒定时器");
+      const timeDiff = process.hrtime(startTime); //记录结束时间，在需要测量的代码段结束后，调用 process.hrtime()并保存返回值。
+      if ( timeDiff[0]>= detail) {
+        console.log(centerText("时间到，训练结束" + "   正确率：" + percent + "%" + "答对" + countCorrect + "次"));
+        clearInterval(interval);
+        stopKeypressListener(handleKeypress);
+        main();
+      }
+    }, 1000);
+  }
+
 
   function handleKeypress(str, key) {
     // key 是一个对象，包含按键的详细信息
@@ -135,7 +154,7 @@ function practice(selectN, detail) {
     if (isCorrect(c, n)) {
       //console.log("输入正确");
       countCorrect++;
-      var percent = Math.round(countCorrect / (countCorrect + countWrong) * 100);
+      percent = Math.round(countCorrect / (countCorrect + countWrong) * 100);
       //console.log(centerText("输入正确"+ "   正确率：" + percent + "%" + "   正确：" + countCorrect + "   错误：" + countWrong));
       switch (selectN) {
         case "select1":
@@ -148,6 +167,17 @@ function practice(selectN, detail) {
           console.log(centerText("输入正确" + "   正确率：" + percent + "%" + "   还剩" + (detail - questionCount) + "轮" + "   用时：" + timeDiff[0] + "秒"));
           if (questionCount == detail) {
             console.log(centerText("训练结束" + "   正确率：" + percent + "%" + "   用时：" + time.minutes + "分" + time.seconds + "秒"));
+            stopKeypressListener(handleKeypress); //停止keypress事件监听
+            main(); //重新开始
+            return;
+          }
+          break;
+        case "select4":
+          const timeDiff2 = process.hrtime(startTime); //记录结束时间，在需要测量的代码段结束后，调用 process.hrtime()并保存返回值。
+          time = secondsToMinutesSeconds(timeDiff2[0]);
+          console.log(centerText("输入正确" + "   正确率：" + percent + "%" + "   剩余：" + (detail - timeDiff2[0]) + "秒"));
+          if (timeDiff2[0] >= detail) {
+            console.log(centerText("训练结束" + "   正确率：" + percent + "%" + "   答对" + countCorrect + "次"));
             stopKeypressListener(handleKeypress); //停止keypress事件监听
             main(); //重新开始
             return;
@@ -187,4 +217,9 @@ function select2() {
 function select3() {
   startTime = process.hrtime(); //记录开始时间，在需要测量的代码段开始前，调用 process.hrtime()并保存返回值。
   practice("select3", 100); //100表示训练100次
+}
+
+function select4() {
+  startTime = process.hrtime(); //记录开始时间，在需要测量的代码段开始前，调用 process.hrtime()并保存返回值。
+  practice("select4", 60); //60表示1分钟
 }
